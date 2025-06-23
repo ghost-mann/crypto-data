@@ -11,7 +11,7 @@ def get_latest_prices(symbol='BTCUSDT'):
     }
     response = requests.get(url,params=params)
     data = response.json()
-    df_prices = pd.DataFrame(data)
+    df_prices = pd.DataFrame([data])
     print(df_prices)
     return df_prices
     
@@ -22,9 +22,15 @@ def order_book(symbol='BTCUSDT',limit=5):
     }
     response = requests.get(url, params=params)
     order_data = response.json()
-    order_df = pd.DataFrame(order_data)
-    print(order_df)
-    return order_df
+    
+    bids_df = pd.DataFrame(order_data['bids'], columns=['price','quantity'])
+    asks_df = pd.DataFrame(order_data['asks'], columns=['price','quantity'])
+    print('bids')
+    print(bids_df)
+    print('asks')
+    print(asks_df)
+    
+    return bids_df,asks_df
 
 get_latest_prices()
 order_book()
