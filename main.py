@@ -32,6 +32,19 @@ def order_book(symbol='BTCUSDT',limit=5):
     
     return bids_df,asks_df
 
-get_latest_prices()
-order_book()
+def recent_trades(symbol='BTCUSDT'):
+    url = f'{BASE_URL}/api/v3/trades'
+    params = {
+        'symbol':symbol.upper()
+    }
+    response = requests.get(url,params=params)
+    trades_data = response.json()
+    trades_df = pd.DataFrame(trades_data)
+    print(trades_df)
+    return trades_df
+    
+
+# get_latest_prices()
+# order_book()
+# recent_trades()
 
