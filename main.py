@@ -42,9 +42,29 @@ def recent_trades(symbol='BTCUSDT'):
     trades_df = pd.DataFrame(trades_data)
     print(trades_df)
     return trades_df
-    
 
+def get_klines(symbol='BTCUSDT',interval='15m'):
+    url = f'{BASE_URL}/api/v3/klines'
+    params = {
+        'symbol':symbol.upper(),
+        'interval':interval
+    }
+    response = requests.get(url,params=params)
+    kline_data = response.json()
+    
+    df_klines = pd.DataFrame(kline_data, columns=[
+        "open_time", "open", "high", "low", "close", "volume",
+        "close_time", "quote_asset_volume", "num_trades",
+        "taker_buy_base_volume", "taker_buy_quote_volume", "ignore"
+    ])
+    print(df_klines)
+    return df_klines
+
+# def ticker_stats():
+    
+    
 # get_latest_prices()
 # order_book()
 # recent_trades()
+# get_klines()
 
