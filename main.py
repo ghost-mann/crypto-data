@@ -60,11 +60,21 @@ def get_klines(symbol='BTCUSDT',interval='15m'):
     print(df_klines)
     return df_klines
 
-# def ticker_stats():
+def ticker_stats(symbol='BTCUSDT'):
+    url = f'{BASE_URL}/api/v3/ticker/24hr'
+    params = {
+        'symbol':symbol.upper(),
+    }
+    response = requests.get(url)
+    ticker_data = response.json()
+    ticker_df = pd.DataFrame(ticker_data)
+    print(ticker_df)
+    return ticker_df
     
     
-# get_latest_prices()
-# order_book()
-# recent_trades()
-# get_klines()
-
+    
+get_latest_prices()
+order_book()
+recent_trades()
+get_klines()
+ticker_stats()
