@@ -3,6 +3,7 @@ import pandas as pd
 import os
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
+from datetime import datetime, timezone
 
 load_dotenv()
 
@@ -30,26 +31,29 @@ def get_latest_prices(symbol):
     response = requests.get(url,params={'symbol':symbol})
     data = response.json()
     df = pd.DataFrame([data])
-    print(df)
+    df['fetched_at'] = datetime.now(timezone.utc)
+    df['symbol'] = symbol
     return df
     
-def order_book(symbol,limit=5):
+def order_book(symbol,limit=20):
     url = f'{BASE_URL}/api/v3/depth'
     response = requests.get(url, params={'symbol':symbol, 'limit':limit})
     order_data = response.json()
     bids_df = pd.DataFrame(order_data['bids'], columns=['price','quantity'])
     asks_df = pd.DataFrame(order_data['asks'], columns=['price','quantity'])
+    bids_df['fetched_at'] = datetime.now(timezone.utc)
+    asks_df['fetched_at'] = datetime.now(timezone.utc)
     bids_df['symbol'] = symbol
     asks_df['symbol'] = symbol
     return bids_df,asks_df
 
-def recent_trades(symbol, limit=5):
+def recent_trades(symbol, limit=20):
     url = f'{BASE_URL}/api/v3/trades'
     response = requests.get(url,params={'symbol':symbol, 'limit':limit})
     trades_data = response.json()
     df = pd.DataFrame(trades_data)
     df['symbol'] = symbol
-    print(df)
+    df['fetched_at'] = datetime.now(timezone.utc)
     return df
 
 def get_klines(symbol,interval='15m'):
@@ -62,8 +66,8 @@ def get_klines(symbol,interval='15m'):
         "close_time", "quote_asset_volume", "num_trades",
         "taker_buy_base_volume", "taker_buy_quote_volume", "ignore"
     ])
+    df['fetched_at'] = datetime.now(timezone.utc)
     df['symbol'] = symbol
-    print(df)
     return df
 
 def ticker_stats(symbol):
@@ -71,7 +75,8 @@ def ticker_stats(symbol):
     response = requests.get(url,params={'symbol':symbol})
     ticker_data = response.json()
     df = pd.DataFrame([ticker_data])
-    print(df)
+    df['fetched_at'] = datetime.now(timezone.utc)
+    df['symbol'] = symbol
     return df
   
 # main loop
