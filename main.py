@@ -63,6 +63,7 @@ def get_latest_prices(symbol):
     df = pd.DataFrame([data])
     df['fetched_at'] = datetime.now(timezone.utc)
     df['symbol'] = symbol
+    print(df)
     return df
     
 def order_book(symbol,limit=20):
@@ -75,6 +76,8 @@ def order_book(symbol,limit=20):
     asks_df['fetched_at'] = datetime.now(timezone.utc)
     bids_df['symbol'] = symbol
     asks_df['symbol'] = symbol
+    print(bids_df)
+    print(asks_df)
     return bids_df,asks_df
 
 def recent_trades(symbol, limit=20):
@@ -84,6 +87,7 @@ def recent_trades(symbol, limit=20):
     df = pd.DataFrame(trades_data)
     df['symbol'] = symbol
     df['fetched_at'] = datetime.now(timezone.utc)
+    print(df.describe())
     return df
 
 def get_klines(symbol,interval='15m'):
@@ -98,6 +102,7 @@ def get_klines(symbol,interval='15m'):
     ])
     df['fetched_at'] = datetime.now(timezone.utc)
     df['symbol'] = symbol
+    print(df)
     return df
 
 def ticker_stats(symbol):
@@ -107,6 +112,7 @@ def ticker_stats(symbol):
     df = pd.DataFrame([ticker_data])
     df['fetched_at'] = datetime.now(timezone.utc)
     df['symbol'] = symbol
+    print(df)
     return df
   
 # main loop
