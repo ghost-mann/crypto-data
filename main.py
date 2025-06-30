@@ -4,6 +4,8 @@ import os
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from datetime import datetime, timezone
+from kafka import KafkaProducer
+import json
 
 load_dotenv()
 
@@ -15,13 +17,41 @@ db_port = os.getenv('AIVEN_PORT')
 
 engine = create_engine(f'postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}')
 
+producer = KafkaProducer(
+    bootstrap_servers=['localhost:9092'],
+    value_serializer=lambda x: json.dumps(x).encode('utf-8'),
+    key_serializer=lambda x: x.encode('utf-8') if x else None
+)
+
+
 BASE_URL = "https://api.binance.com"
 TOP_PAIRS = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT"]
 INTERVAL = '15m'
 
-def save_to_postgres(df, table_name):
+def save_to_postgres_and_kafka(df, table_name, topic_name):
     try:
         df.to_sql(table_name, engine, if_exists='append', index=False)
+        print(f'Saved to PostgreSQL table: {table_name}')
+        
+        for _, row in df.iterrows():
+            record = row.to_dict()
+            # Convert Timestamp objects to strings
+            for key, value in record.items():
+                if isinstance(value, pd.Timestamp):
+                    record[key] = value.isoformat()
+                elif pd.isna(value):
+                    record[key] = None
+            
+            producer.send(
+                topic_name, 
+                value=record,
+                key=record.get('symbol', 'unknown')
+            )
+        
+        producer.flush()
+        print(f'Sent to Kafka topic: {topic_name}')
+        
+    
     except Exception as e:
         print(f'Error saving {table_name}: {e}')
 
@@ -80,23 +110,28 @@ def ticker_stats(symbol):
     return df
   
 # main loop
-for symbol in TOP_PAIRS:
-    print(f'Collecting data for {symbol}')
-    
-    price_df = get_latest_prices(symbol)
-    save_to_postgres(price_df,"latest_prices")
-    
-    trades_df = recent_trades(symbol)
-    save_to_postgres(trades_df, "recent_trades")
-    
-    klines_df = get_klines(symbol)
-    save_to_postgres(klines_df, "klines_15m")
-    
-    ticker_df = ticker_stats(symbol)
-    save_to_postgres(ticker_df, "stats_24h")
-    
-    bids_df, asks_df = order_book(symbol)
-    save_to_postgres(bids_df, "orderbook_bids")
-    save_to_postgres(asks_df, "orderbook_asks")
-      
+try:
+    for symbol in TOP_PAIRS:
+        print(f'Collecting data for {symbol}')
+        
+        price_df = get_latest_prices(symbol)
+        save_to_postgres_and_kafka(price_df,"latest_prices","latest_price")
+        
+        trades_df = recent_trades(symbol)
+        save_to_postgres_and_kafka(trades_df, "recent_trades","recent_trades")
+        
+        klines_df = get_klines(symbol)
+        save_to_postgres_and_kafka(klines_df, "klines_15m","klines_15m")
+        
+        ticker_df = ticker_stats(symbol)
+        save_to_postgres_and_kafka(ticker_df, "stats_24h","stats_24h")
+        
+        bids_df, asks_df = order_book(symbol)
+        save_to_postgres_and_kafka(bids_df, "orderbook_bids","orderbook_bids")
+        save_to_postgres_and_kafka(asks_df, "orderbook_asks","orderbook_asks")
+
+finally:
+    producer.close()
+    print("Kafka closed!")
+        
    
