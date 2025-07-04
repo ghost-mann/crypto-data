@@ -66,5 +66,5 @@ services:
       - crypto-data_cassandra-data:/var/lib/cassandra
 
 volumes:
-  crypto-data_cassandra-data:
-    external: true
+  cassandra-data:
+
