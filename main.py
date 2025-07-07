@@ -33,6 +33,7 @@ def save_to_postgres_and_kafka(df, table_name, topic_name):
         df.to_sql(table_name, engine, if_exists='append', index=False)
         print(f'Saved to PostgreSQL table: {table_name}')
         
+        # iterates over each row of df
         for _, row in df.iterrows():
             record = row.to_dict()
             # Convert Timestamp objects to strings

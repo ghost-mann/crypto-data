@@ -1,3 +1,5 @@
+version: "3.8"
+
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:7.6.0
@@ -31,7 +33,18 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
 
-  connect:
+  cassandra:
+    image: cassandra:4.1
+    container_name: cassandra
+    ports:
+      - "9042:9042"
+    environment:
+      - CASSANDRA_CLUSTER_NAME=CDCCluster
+      - CASSANDRA_DC=datacenter1
+    volumes:
+      - cassandra-data:/var/lib/cassandra
+
+  kafka-connect:
     image: debezium/connect:2.5
     container_name: kafka-connect
     depends_on:
@@ -50,21 +63,9 @@ services:
       VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
       KEY_CONVERTER_SCHEMAS_ENABLE: "false"
       VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
-      PLUGIN_PATH: /kafka/connect
+      PLUGIN_PATH: /kafka/connect,/kafka/connectors
     volumes:
-      - ./kafka-plugins:/kafka/connect
-
-  cassandra:
-    image: cassandra:4.1
-    container_name: cassandra
-    ports:
-      - "9042:9042"
-    environment:
-      - CASSANDRA_CLUSTER_NAME=CDCCluster
-      - CASSANDRA_DC=datacenter1
-    volumes:
-      - crypto-data_cassandra-data:/var/lib/cassandra
+      - ./kafka-plugins:/kafka/connectors
 
 volumes:
   cassandra-data:
-
