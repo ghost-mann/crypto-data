@@ -3,3 +3,4 @@ pandas
 python-dotenv
 SQLAlchemy
 kafka-python
+psycopg2-binary

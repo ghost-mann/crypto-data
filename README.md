@@ -1,3 +1,9 @@
+# REAL TIME CRYPTOCURRENCY DATA PIPELINE
+
+## workflow
+binance api --> debezium/postgres --> debezium/connect --> kafka(zookeeper) --> cassandra
+
+
 Python inserts data into → PostgreSQL 
 PostgreSQL changes are detected by → Debezium 
 Debezium sends changes to → Kafka 
@@ -10,8 +16,17 @@ Connector writes them into → Cassandra database
 - Change tracking is enabled in PostgreSQL so that every insert/delete/update is logged.
 
 
-*** DOCKER COMMANDS ***
- docker exec -it kafka bash - start kafka cli 
+*** DOCKER COMMANDS *** 
 
+### running kafka shell in docker
+docker exec -it kafka bash - start kafka cli
 
-api -- debezium/postgres -- debezium/connect --- zookeeper -- kafka -- cassandra
+### building docker image using dockerfile
+docker build -t binance-collector .
+
+### running docker image
+docker run --network="host" --env-file .env binance-collector
+
+### docker cassandra shell
+docker exec -it cassandra cqlsh
+

@@ -18,7 +18,7 @@ db_port = os.getenv('AIVEN_PORT')
 engine = create_engine(f'postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}')
 
 producer = KafkaProducer(
-    bootstrap_servers=['localhost:9092'],
+    bootstrap_servers=['kafka:9092'],
     value_serializer=lambda x: json.dumps(x).encode('utf-8'),
     key_serializer=lambda x: x.encode('utf-8') if x else None
 )
