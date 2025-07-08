@@ -8,10 +8,13 @@ services:
       - "2181:2181"
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
 
   kafka:
     image: confluentinc/cp-kafka:7.6.0
     container_name: kafka
+    depends_on:
+      - zookeeper
     ports:
       - "9092:9092"
     environment:
@@ -32,6 +35,8 @@ services:
       POSTGRES_DB: binance
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
 
   cassandra:
     image: cassandra:4.1
@@ -43,6 +48,11 @@ services:
       CASSANDRA_DC: datacenter1
     volumes:
       - cassandra-data:/var/lib/cassandra
+    healthcheck:
+      test: ["CMD", "cqlsh", "-e", "describe keyspaces"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   kafka-connect:
     image: debezium/connect:2.5
@@ -69,3 +79,4 @@ services:
 
 volumes:
   cassandra-data:
+  postgres-data:
