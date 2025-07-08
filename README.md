@@ -14,3 +14,4 @@ Connector writes them into → Cassandra database
  docker exec -it kafka bash - start kafka cli 
 
 
+api -- debezium/postgres -- debezium/connect --- zookeeper -- kafka -- cassandra
