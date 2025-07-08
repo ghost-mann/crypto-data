@@ -16,7 +16,7 @@ Connector writes them into → Cassandra database
 - Change tracking is enabled in PostgreSQL so that every insert/delete/update is logged.
 
 
-*** DOCKER COMMANDS *** 
+## DOCKER COMMANDS 
 
 ### running kafka shell in docker
 docker exec -it kafka bash - start kafka cli
