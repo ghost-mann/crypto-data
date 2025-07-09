@@ -23,7 +23,6 @@ producer = KafkaProducer(
     key_serializer=lambda x: x.encode('utf-8') if x else None
 )
 
-
 BASE_URL = "https://api.binance.com"
 TOP_PAIRS = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT"]
 INTERVAL = '15m'
@@ -33,10 +32,8 @@ def save_to_postgres_and_kafka(df, table_name, topic_name):
         df.to_sql(table_name, engine, if_exists='append', index=False)
         print(f'Saved to PostgreSQL table: {table_name}')
         
-        # iterates over each row of df
         for _, row in df.iterrows():
             record = row.to_dict()
-            # Convert Timestamp objects to strings
             for key, value in record.items():
                 if isinstance(value, pd.Timestamp):
                     record[key] = value.isoformat()
@@ -52,50 +49,44 @@ def save_to_postgres_and_kafka(df, table_name, topic_name):
         producer.flush()
         print(f'Sent to Kafka topic: {topic_name}')
         
-    
     except Exception as e:
         print(f'Error saving {table_name}: {e}')
 
-
 def get_latest_prices(symbol):
     url = f'{BASE_URL}/api/v3/ticker/price'
-    response = requests.get(url,params={'symbol':symbol})
+    response = requests.get(url, params={'symbol': symbol})
     data = response.json()
     df = pd.DataFrame([data])
     df['fetched_at'] = datetime.now(timezone.utc)
     df['symbol'] = symbol
-    print(df)
     return df
-    
-def order_book(symbol,limit=20):
+
+def order_book(symbol, limit=20):
     url = f'{BASE_URL}/api/v3/depth'
-    response = requests.get(url, params={'symbol':symbol, 'limit':limit})
+    response = requests.get(url, params={'symbol': symbol, 'limit': limit})
     order_data = response.json()
-    bids_df = pd.DataFrame(order_data['bids'], columns=['price','quantity'])
-    asks_df = pd.DataFrame(order_data['asks'], columns=['price','quantity'])
-    bids_df['fetched_at'] = datetime.now(timezone.utc)
-    asks_df['fetched_at'] = datetime.now(timezone.utc)
+    bids_df = pd.DataFrame(order_data['bids'], columns=['price', 'quantity'])
+    asks_df = pd.DataFrame(order_data['asks'], columns=['price', 'quantity'])
+    fetched_at = datetime.now(timezone.utc)
+    bids_df['fetched_at'] = fetched_at
+    asks_df['fetched_at'] = fetched_at
     bids_df['symbol'] = symbol
     asks_df['symbol'] = symbol
-    print(bids_df)
-    print(asks_df)
-    return bids_df,asks_df
+    return bids_df, asks_df
 
 def recent_trades(symbol, limit=20):
     url = f'{BASE_URL}/api/v3/trades'
-    response = requests.get(url,params={'symbol':symbol, 'limit':limit})
+    response = requests.get(url, params={'symbol': symbol, 'limit': limit})
     trades_data = response.json()
     df = pd.DataFrame(trades_data)
     df['symbol'] = symbol
     df['fetched_at'] = datetime.now(timezone.utc)
-    print(df.describe())
     return df
 
-def get_klines(symbol,interval='15m'):
+def get_klines(symbol, interval='15m'):
     url = f'{BASE_URL}/api/v3/klines'
-    response = requests.get(url,params={'symbol':symbol, 'interval':interval})
+    response = requests.get(url, params={'symbol': symbol, 'interval': interval})
     kline_data = response.json()
-    
     df = pd.DataFrame(kline_data, columns=[
         "open_time", "open", "high", "low", "close", "volume",
         "close_time", "quote_asset_volume", "num_trades",
@@ -103,42 +94,38 @@ def get_klines(symbol,interval='15m'):
     ])
     df['fetched_at'] = datetime.now(timezone.utc)
     df['symbol'] = symbol
-    print(df)
     return df
 
 def ticker_stats(symbol):
     url = f'{BASE_URL}/api/v3/ticker/24hr'
-    response = requests.get(url,params={'symbol':symbol})
+    response = requests.get(url, params={'symbol': symbol})
     ticker_data = response.json()
     df = pd.DataFrame([ticker_data])
     df['fetched_at'] = datetime.now(timezone.utc)
     df['symbol'] = symbol
-    print(df)
     return df
-  
-# main loop
+
+# Main loop
 try:
     for symbol in TOP_PAIRS:
         print(f'Collecting data for {symbol}')
-        
+
         price_df = get_latest_prices(symbol)
-        save_to_postgres_and_kafka(price_df,"latest_prices","latest_price")
-        
+        save_to_postgres_and_kafka(price_df, "latest_prices", "binance.public.latest_prices")
+
         trades_df = recent_trades(symbol)
-        save_to_postgres_and_kafka(trades_df, "recent_trades","recent_trades")
-        
+        save_to_postgres_and_kafka(trades_df, "recent_trades", "binance.public.recent_trades")
+
         klines_df = get_klines(symbol)
-        save_to_postgres_and_kafka(klines_df, "klines_15m","klines_15m")
-        
+        save_to_postgres_and_kafka(klines_df, "klines_15m", "binance.public.klines_15m")
+
         ticker_df = ticker_stats(symbol)
-        save_to_postgres_and_kafka(ticker_df, "stats_24h","stats_24h")
-        
+        save_to_postgres_and_kafka(ticker_df, "stats_24h", "binance.public.stats_24h")
+
         bids_df, asks_df = order_book(symbol)
-        save_to_postgres_and_kafka(bids_df, "orderbook_bids","orderbook_bids")
-        save_to_postgres_and_kafka(asks_df, "orderbook_asks","orderbook_asks")
+        save_to_postgres_and_kafka(bids_df, "orderbook_bids", "binance.public.orderbook_bids")
+        save_to_postgres_and_kafka(asks_df, "orderbook_asks", "binance.public.orderbook_asks")
 
 finally:
     producer.close()
     print("Kafka closed!")
-        
-   
