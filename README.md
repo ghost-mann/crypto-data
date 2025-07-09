@@ -32,6 +32,11 @@ docker run --rm --network="host" --env-file .env --name binance-collector binanc
 ### docker cassandra shell
 docker exec -it cassandra cqlsh
 
+### docker postgres shell
+docker exec -it postgres bash 
+
+psql -U postgres -d postgres
+
 ### checking connector status
 curl -s http://localhost:8083/connectors | jq  
 
@@ -69,3 +74,7 @@ SELECT COUNT(*) FROM latest_prices;
 SELECT COUNT(*) FROM recent_trades;
 
 curl http://localhost:8083/connectors/cassandra-sink-connector/status
+
+
+kafka-console-consumer --bootstrap-server localhost:9092 \
+  --topic binance.public.latest_prices --from-beginning --max-messages 5
