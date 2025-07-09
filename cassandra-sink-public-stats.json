@@ -1,25 +1,20 @@
 {
   "connector.class": "com.datastax.oss.kafka.sink.CassandraSinkConnector",
   "tasks.max": "1",
-  "topics": "binance.public.latest_prices",
-
+  "topics": "binance.public.stats_24h",
   "contactPoints": "cassandra",
   "port": "9042",
   "loadBalancing.localDc": "datacenter1",
-
   "key.converter": "org.apache.kafka.connect.json.JsonConverter",
   "key.converter.schemas.enable": "false",
   "value.converter": "org.apache.kafka.connect.json.JsonConverter",
   "value.converter.schemas.enable": "false",
-
   "errors.tolerance": "all",
   "errors.log.enable": "true",
   "errors.log.include.messages": "true",
-
   "maxConcurrentRequests": "500",
   "queryExecutionTimeoutMs": "30000",
-
-  "topic.binance.public.latest_prices.binance.latest_prices.mapping": "symbol=value.after.symbol, price=value.after.price, fetched_at=value.after.fetched_at",
+  "topic.binance.public.stats_24h.binance.stats_24h.mapping": "symbol=value.after.symbol, priceChange=value.after.priceChange, priceChangePercent=value.after.priceChangePercent, weightedAvgPrice=value.after.weightedAvgPrice, prevClosePrice=value.after.prevClosePrice, lastPrice=value.after.lastPrice, lastQty=value.after.lastQty, bidPrice=value.after.bidPrice, bidQty=value.after.bidQty, askPrice=value.after.askPrice, askQty=value.after.askQty, openPrice=value.after.openPrice, highPrice=value.after.highPrice, lowPrice=value.after.lowPrice, volume=value.after.volume, quoteVolume=value.after.quoteVolume, openTime=value.after.openTime, closeTime=value.after.closeTime, firstId=value.after.firstId, lastId=value.after.lastId, count=value.after.count, fetched_at=value.after.fetched_at",
   "transforms": "dropSnapshot",
   "transforms.dropSnapshot.type": "org.apache.kafka.connect.transforms.Filter$Value",
   "transforms.dropSnapshot.predicate": "isReadOp",
