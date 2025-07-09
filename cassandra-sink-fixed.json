@@ -1,0 +1,23 @@
+{
+  "connector.class": "com.datastax.oss.kafka.sink.CassandraSinkConnector",
+  "tasks.max": "1",
+  "topics": "binance.public.latest_prices,binance.public.recent_trades,binance.public.klines_15m,binance.public.stats_24h,binance.public.orderbook_bids,binance.public.orderbook_asks",
+  "contactPoints": "cassandra",
+  "loadBalancing.localDc": "datacenter1",
+  "port": "9042",
+  "maxConcurrentRequests": "500",
+  "queryExecutionTimeoutMs": "30000",
+  "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+  "key.converter.schemas.enable": "false",
+  "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+  "value.converter.schemas.enable": "false",
+  "errors.tolerance": "all",
+  "errors.log.enable": "true",
+  "errors.log.include.messages": "true",
+  "topic.binance.public.latest_prices.binance.latest_prices.mapping": "symbol=value.symbol, price=value.price, fetched_at=value.fetched_at",
+  "topic.binance.public.recent_trades.binance.recent_trades.mapping": "id=value.id, price=value.price, qty=value.qty, quoteqty=value.quoteQty, fetched_at=value.fetched_at, symbol=value.symbol, isbuyermaker=value.isBuyerMaker, isbestmatch=value.isBestMatch, time=value.time",
+  "topic.binance.public.klines_15m.binance.klines_15m.mapping": "symbol=value.symbol, fetched_at=value.fetched_at, open_time=value.open_time, open=value.open, high=value.high, low=value.low, close=value.close, volume=value.volume",
+  "topic.binance.public.stats_24h.binance.stats_24h.mapping": "symbol=value.symbol, pricechangepct=value.priceChangePercent, avg_price=value.weightedAvgPrice, volume=value.volume, fetched_at=value.fetched_at",
+  "topic.binance.public.orderbook_bids.binance.orderbook_bids.mapping": "symbol=value.symbol, price=value.price, quantity=value.quantity, fetched_at=value.fetched_at",
+  "topic.binance.public.orderbook_asks.binance.orderbook_asks.mapping": "symbol=value.symbol, price=value.price, quantity=value.quantity, fetched_at=value.fetched_at"
+}

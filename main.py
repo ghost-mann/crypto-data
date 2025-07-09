@@ -6,6 +6,7 @@ from sqlalchemy import create_engine
 from datetime import datetime, timezone
 from kafka import KafkaProducer
 import json
+from decimal import Decimal
 
 load_dotenv()
 
@@ -17,37 +18,67 @@ db_port = os.getenv('AIVEN_PORT')
 
 engine = create_engine(f'postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}')
 
+# Try both bootstrap servers - adjust based on your setup
 producer = KafkaProducer(
-    bootstrap_servers=['kafka:9092'],
-    value_serializer=lambda x: json.dumps(x).encode('utf-8'),
-    key_serializer=lambda x: x.encode('utf-8') if x else None
+    bootstrap_servers=['localhost:9092', 'localhost:29092'],  # Try both
+    value_serializer=lambda x: json.dumps(x, default=str).encode('utf-8'),
+    key_serializer=lambda x: x.encode('utf-8') if x else None,
+    acks='all',  # Wait for all replicas to acknowledge
+    retries=3,
+    batch_size=16384,
+    linger_ms=10
 )
 
 BASE_URL = "https://api.binance.com"
 TOP_PAIRS = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT"]
 INTERVAL = '15m'
 
+def clean_record_for_cassandra(record):
+    """Clean record to ensure compatibility with Cassandra"""
+    cleaned = {}
+    for key, value in record.items():
+        if isinstance(value, pd.Timestamp):
+            cleaned[key] = value.isoformat()
+        elif pd.isna(value):
+            cleaned[key] = None
+        elif isinstance(value, (int, float)):
+            # Convert to string for decimal fields to avoid precision issues
+            cleaned[key] = str(value)
+        elif isinstance(value, bool):
+            cleaned[key] = value
+        else:
+            cleaned[key] = str(value)
+    return cleaned
+
 def save_to_postgres_and_kafka(df, table_name, topic_name):
     try:
+        # Save to PostgreSQL
         df.to_sql(table_name, engine, if_exists='append', index=False)
-        print(f'Saved to PostgreSQL table: {table_name}')
+        print(f'Saved {len(df)} rows to PostgreSQL table: {table_name}')
+        
+        # Send to Kafka
+        success_count = 0
+        error_count = 0
         
         for _, row in df.iterrows():
-            record = row.to_dict()
-            for key, value in record.items():
-                if isinstance(value, pd.Timestamp):
-                    record[key] = value.isoformat()
-                elif pd.isna(value):
-                    record[key] = None
+            record = clean_record_for_cassandra(row.to_dict())
             
-            producer.send(
-                topic_name, 
-                value=record,
-                key=record.get('symbol', 'unknown')
-            )
+            try:
+                future = producer.send(
+                    topic_name, 
+                    value=record,
+                    key=record.get('symbol', 'unknown')
+                )
+                # Wait for the send to complete
+                result = future.get(timeout=10)
+                success_count += 1
+                print(f'Sent record to {topic_name}: {record.get("symbol", "unknown")}')
+            except Exception as e:
+                error_count += 1
+                print(f'Error sending record to {topic_name}: {e}')
         
         producer.flush()
-        print(f'Sent to Kafka topic: {topic_name}')
+        print(f'Kafka summary - Topic: {topic_name}, Success: {success_count}, Errors: {error_count}')
         
     except Exception as e:
         print(f'Error saving {table_name}: {e}')
@@ -105,10 +136,18 @@ def ticker_stats(symbol):
     df['symbol'] = symbol
     return df
 
+# Test connectivity first
+print("Testing Kafka connectivity...")
+try:
+    metadata = producer.bootstrap_connected()
+    print(f"Kafka connection successful: {metadata}")
+except Exception as e:
+    print(f"Kafka connection failed: {e}")
+
 # Main loop
 try:
     for symbol in TOP_PAIRS:
-        print(f'Collecting data for {symbol}')
+        print(f'\n=== Collecting data for {symbol} ===')
 
         price_df = get_latest_prices(symbol)
         save_to_postgres_and_kafka(price_df, "latest_prices", "binance.public.latest_prices")
@@ -126,6 +165,8 @@ try:
         save_to_postgres_and_kafka(bids_df, "orderbook_bids", "binance.public.orderbook_bids")
         save_to_postgres_and_kafka(asks_df, "orderbook_asks", "binance.public.orderbook_asks")
 
+        print(f'Completed data collection for {symbol}')
+
 finally:
     producer.close()
-    print("Kafka closed!")
+    print("Kafka producer closed!")
