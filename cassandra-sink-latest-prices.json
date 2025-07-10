@@ -15,12 +15,7 @@
   "maxConcurrentRequests": "500",
   "queryExecutionTimeoutMs": "30000",
   "topic.binance.public.latest_prices.binance.latest_prices.mapping": "symbol=value.after.symbol, price=value.after.price, fetched_at=value.after.fetched_at",
-  "transforms": "dropSnapshot",
-  "transforms.dropSnapshot.type": "org.apache.kafka.connect.transforms.Filter$Value",
-  "transforms.dropSnapshot.predicate": "isReadOp",
-  "predicates": "isReadOp",
-  "predicates.isReadOp.type": "org.apache.kafka.connect.transforms.predicates.RecordValue$FieldValue",
-  "predicates.isReadOp.field": "op",
-  "predicates.isReadOp.value": "r",
-  "predicates.isReadOp.negate": "true"
+  "topic.binance.public.latest_prices.binance.latest_prices.nullToUnset": "true",
+  "topic.binance.public.latest_prices.binance.latest_prices.codec.locale": "en_US",
+  "topic.binance.public.latest_prices.binance.latest_prices.codec.timeZone": "UTC"
 }
