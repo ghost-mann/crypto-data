@@ -1,7 +1,7 @@
 # REAL TIME CRYPTOCURRENCY DATA PIPELINE
 
 ## workflow
-binance api --> debezium/postgres --> debezium/connect --> kafka(zookeeper) --> cassandra
+binance api --> debezium/postgres --> debezium/connect --> kafka(zookeeper) --> cassandra --> grafana
 
 
 Python inserts data into → PostgreSQL 
@@ -40,7 +40,12 @@ psql -U postgres -d postgres
 ### checking connector status
 curl -s http://localhost:8083/connectors | jq  
 
-### registering connector 
+### registering connector
+$ curl -X POST http://localhost:8083/connectors \
+  -H "Content-Type: application/json" \
+  --data @postgres-debezium-source.json
+
+### check status 
 curl -s http://localhost:8083/connectors/cassandra-sink-connector/status | jq
 
 ### Delete the connector
@@ -50,6 +55,7 @@ curl -X DELETE http://localhost:8083/connectors/cassandra-sink-connector
 curl -X PUT http://localhost:8083/connectors/cassandra-sink-connector/config \
   -H "Content-Type: application/json" \
   --data @cassandra-sink.json
+
 
 ## SQL
 ### Check if keyspace exists
@@ -78,3 +84,17 @@ curl http://localhost:8083/connectors/cassandra-sink-connector/status
 
 kafka-console-consumer --bootstrap-server localhost:9092 \
   --topic binance.public.latest_prices --from-beginning --max-messages 5
+
+
+kafka-topics --create --topic binance.recent_trades --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
+
+kafka-topics --create --topic binance.klines_15m --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
+
+kafka-topics --create --topic binance.stats_24h --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
+
+kafka-topics --create --topic binance.orderbook_bids --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
+
+kafka-topics --create --topic binance.orderbook_asks --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
+
+
+

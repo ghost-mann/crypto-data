@@ -73,15 +73,15 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
-  kafka-ui:
-    container_name: kafka-ui
-    image: provectuslabs/kafka-ui:latest
-    ports:
-      - 8080:8080
-    environment:
-      DYNAMIC_CONFIG_ENABLED: 'true'
-    volumes:
-      - ~/kui/config.yml:/etc/kafkaui/dynamic_config.yaml
+  # kafka-ui:
+  #   container_name: kafka-ui
+  #   image: provectuslabs/kafka-ui:latest
+  #   ports:
+  #     - 8080:8080
+  #   environment:
+  #     DYNAMIC_CONFIG_ENABLED: 'true'
+  #   volumes:
+  #     - ~/kui/config.yml:/etc/kafkaui/dynamic_config.yaml
   kafka-connect:
     image: confluentinc/cp-kafka-connect:7.6.0
     container_name: kafka-connect
