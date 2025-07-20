@@ -1,0 +1,18 @@
+{
+  "connector.class": "com.datastax.oss.kafka.sink.CassandraSinkConnector",
+  "tasks.max": "1",
+  "topics": "binance.public.orderbook_bids",
+  "contactPoints": "cassandra",
+  "port": "9042",
+  "loadBalancing.localDc": "datacenter1",
+  "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+  "key.converter.schemas.enable": "false",
+  "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+  "value.converter.schemas.enable": "false",
+  "errors.tolerance": "all",
+  "errors.log.enable": "true",
+  "errors.log.include.messages": "true",
+  "maxConcurrentRequests": "500",
+  "queryExecutionTimeoutMs": "30000",
+  "topic.binance.public.orderbook_bids.binance.orderbook_bids.mapping": "symbol=value.after.symbol, price=value.after.price, quantity=value.after.quantity, fetched_at=value.after.fetched_at"
+}

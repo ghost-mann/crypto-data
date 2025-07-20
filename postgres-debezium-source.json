@@ -1,0 +1,21 @@
+{
+  "name": "postgres-debezium-connector",
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+    "plugin.name": "pgoutput",
+    "tasks.max": "1",
+    "database.hostname": "postgres",
+    "database.port": "5432",
+    "database.user": "postgres",
+    "database.password": "password",
+    "database.dbname": "binance",
+    "database.server.name": "binance_server",
+    "topic.prefix": "binance",
+    "table.include.list": "public.latest_prices,public.recent_trades,public.klines_15m,public.stats_24h,public.orderbook_bids,public.orderbook_asks",
+    "slot.name": "binance_slot",
+    "publication.name": "binance_pub",
+    "tombstones.on.delete": "false",
+    "decimal.handling.mode": "double"
+  }
+}
+
