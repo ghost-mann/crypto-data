@@ -4,16 +4,16 @@ import os
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from datetime import datetime, timezone
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
 
 load_dotenv()
 
-db_user = os.getenv('AIVEN_USERNAME')
-db_password = os.getenv('AIVEN_PASSWORD')
-db_host = os.getenv('AIVEN_HOST')
-db_name = os.getenv('AIVEN_DBNAME')
-db_port = os.getenv('AIVEN_PORT')
+DATABASE_URL = os.getenv('DATABASE_URL')
+logging.debug("DATABASE_URL %s", DATABASE_URL)
 
-engine = create_engine(f'postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}')
+engine = create_engine(DATABASE_URL)
 
 BASE_URL = "https://api.binance.com"
 TOP_PAIRS = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT"]
