@@ -1,6 +1,6 @@
-requests
-pandas
-python-dotenv
-SQLAlchemy
-kafka-python
-psycopg2-binary
+requests==2.32.4
+pandas==2.3.1
+python-dotenv==1.1.1
+SQLAlchemy==2.0.41
+kafka-python==2.2.15
+psycopg2-binary==2.9.10
